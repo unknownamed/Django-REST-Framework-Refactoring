@@ -1,59 +1,31 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import viewsets  # ModelViewSet에 모두 정의되어있음, 상속만 받자
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from .models import Post
 from .serializers import PostSerializer
+from rest_framework.decorators import action  # 데코레이터 action을 사용하기 위해
+from rest_framework.response import Response  # 반환을 직접 넣어줘야함
 
 
-# 1. 목록 조회(GET)와 생성(POST)을 담당하는 클래스
-class PostList(APIView):
-    permission_classes = [IsAuthenticatedOrReadOnly]  # 권한설정 변수값
-
-    def get(self, request):
-        posts = Post.objects.all().order_by("-published_date")
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = PostSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# 2. 상세 조회(GET), 수정(PATCH), 삭제(DELETE)를 담당하는 클래스
-class PostDetail(APIView):
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all().order_by(
+        "-published_date"
+    )  # 정렬만 기존 list의 정렬을 유지하기위해 "-published_date" 유지
+    serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    def get_object(self, pk):
-        # 객체를 가져오는 코드 따로 함수화로 단순화
-        try:
-            return Post.objects.get(pk=pk)
-        except Post.DoesNotExist:
-            return None
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
-    def get(self, request, pk):
-        post = self.get_object(pk)
-        if post is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = PostSerializer(post)
-        return Response(serializer.data)
-
-    def patch(self, request, pk):
-        post = self.get_object(pk)
-        if post is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = PostSerializer(post, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        post = self.get_object(pk)
-        if post is None:
-            return Response(status=status.HTTP_404_NOT_FOUND)
-        post.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    @action(detail=True, methods=["PATCH"])
+    def title_change_A(
+        self, request, pk=None
+    ):  # 혹시 pk값 없을 경우, 프로그램의 오류 발생을 막기위함
+        destination_post = self.get_object()
+        destination_post.title = "A"
+        destination_post.save()
+        serializer = self.get_serializer(
+            destination_post
+        )  # 클래스의 직렬화 방법을 따름, 직렬화 해서 넘겨주기
+        return Response(
+            serializer.data
+        )  # title만 A로 만들고 나머지는 그대로 넘겨줌, 바뀌었다는 정보를 Json으로 알려줌

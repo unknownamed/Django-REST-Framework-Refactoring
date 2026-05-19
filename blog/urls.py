@@ -1,9 +1,13 @@
-from django.urls import path
-from .views import PostList, PostDetail  # APIView 클래스 가져오기
+from django.urls import path, include
+from rest_framework.routers import SimpleRouter
+from .views import PostViewSet  # ModelViewSet 가져오기
+
+router = SimpleRouter()  # 라우터 객체 생성 -> 기본 라우터
+
+router.register(
+    r"posts", PostViewSet
+)  # 라우터 객체에 ModelViewSet 등록, posts/(붙이기나름, blog도 가능)로 시작하는 URL은 모두 ModelViewSet에서 처리(매핑은 라우터가함)
 
 urlpatterns = [
-    # 기존 post_list_create 대체, url패턴에 연결된함수 PostList.as_view() - 클래스 하위 함수를 모두 포괄한다는 뜻인듯 로 연결
-    path("posts/", PostList.as_view(), name="post-list"),
-    # 기존 post_detail_update_delete 대체, url패턴에 함수 연결
-    path("posts/<int:pk>/", PostDetail.as_view(), name="post-detail"),
+    path("", include(router.urls)),  # 라우터를 통한 장고의 urlpatterns 등록
 ]
