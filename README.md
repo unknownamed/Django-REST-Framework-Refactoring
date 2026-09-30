@@ -12,6 +12,14 @@
 
 [리팩터링 과정 전체](#original-readme-preserved) · [이전 APIView 구현](https://github.com/unknownamed/Simplifying-code-with-Django-REST-Framework)
 
+## 실제 API 동작 GIF
+
+![Django ViewSet 게시글 생성, 조회, 수정, 제목 변경 액션과 삭제](docs/images/drf-viewset-api-demo.gif)
+
+빈 목록 조회 → 글 생성(201) → 상세 조회 → 제목 수정 → 커스텀 액션으로 제목을 `A`로 변경 → 삭제(204) → 빈 목록 확인 흐름입니다. 별도 로컬 SQLite DB에서 받은 실제 HTTP 요청·응답을 16:9 GIF로 정리했습니다.
+
+[실행 환경과 캡처 과정](docs/demo-capture.md)
+
 ## 커스텀 기능 미리보기
 
 <img src="images/image%206.png" alt="PATCH 요청으로 글 제목을 A로 바꾸고 JSON 응답을 확인한 화면" width="760">
